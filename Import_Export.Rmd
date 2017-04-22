@@ -1,0 +1,51 @@
+---
+title: "DataImport/Export"
+author: "Thomas Laurent"
+date: "2017年4月22日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars}
+#Packages
+library("rio")
+library("readr")
+library("data.table")
+library("feather")
+
+#Online Data
+library("WDI")
+```
+
+```{r}
+#Import
+path=file.path("Files","fpempl01.csv")
+# Import the file (uses the fread function from data.table)
+base = import(path)
+# Export the file as an Excel spreadsheet
+export(base "voc_voyages.xlsx")
+
+#Plain text
+base = readr::read_csv(path)
+```
+
+```{r}
+#Binary file save
+save(base, file = "base.RData")
+saveRDS(base, "base.Rds")
+load("base.RData")
+base_rds = readRDS("base.Rds")
+identical(base, base_rds)
+```
+
+```{r}
+#Binary Python - R
+library("feather")
+write_feather(base, "base.feather")
+base_feather = read_feather("base.feather")
+```
+
