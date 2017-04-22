@@ -1,4 +1,6 @@
-# RDataScience
+# R programming Resources
 
 R for Data Science
-[I'm an inline-style link]http://r4ds.had.co.nz
+[R for Data Science link]http://r4ds.had.co.nz
+
+[Efficient programming with R link]https://csgillespie.github.io/efficientR/
