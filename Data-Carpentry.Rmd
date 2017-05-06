@@ -54,3 +54,13 @@ separate(agesex_df, col = agesex, into = c("age", "sex"))
 library(stringr)
 ```
 
+#Database connectivity
+
+```{r}
+library("RSQLite")
+con = dbConnect(SQLite(), dbname = ghg_db) # Also username & password arguments
+dbListTables(con)
+rs = dbSendQuery(con, "SELECT * FROM `ghg_ems` WHERE (`Country` != 'World')")
+df_head = dbFetch(rs, n = 6) # extract first 6 row
+```
+

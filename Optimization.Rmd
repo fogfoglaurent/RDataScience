@@ -1,0 +1,103 @@
+---
+title: "Optimization"
+author: "Thomas Laurent"
+date: "2017年5月6日"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Package
+```{r}
+library("microbenchmark")
+library("ggplot2movies")
+library("profvis")
+library("Rcpp")
+```
+
+```{r}
+library("profvis")
+profvis({
+  data(movies, package = "ggplot2movies") # Load data
+  movies = movies[movies$Comedy == 1,]
+  plot(movies$year, movies$rating)
+  model = loess(rating ~ year, data = movies) # loess regression line
+  j = order(movies$year)
+  lines(movies$year[j], model$fitted[j]) # Add line to the plot
+})
+```
+
+```{r}
+marks = runif(n = 10e6, min = 30, max = 99)
+system.time({
+  result1 = ifelse(marks >= 40, "pass", "fail")
+})
+
+system.time({
+  result2 = rep("fail", length(marks)) 
+  result2[marks >= 40] = "pass"
+})
+```
+
+#Parallel programming
+
+```{r}
+library("parallel")
+no_of_cores = detectCores()
+```
+
+```{r}
+#Sourcing file
+#Data cleaning
+url="https://raw.githubusercontent.com/csgillespie/efficient/master/R/snakes_and_ladders.R"
+source(url)
+
+N = 10^4
+sapply(1:N, snakes_ladders)
+```
+
+```{r}
+#Parallel programming
+
+library("parallel")
+cl = makeCluster(4)
+parSapply(cl, 1:N, snakes_ladders)
+stopCluster(cl)
+
+mclapply(1:N, snakes_ladders)
+```
+
+#Implementing C++
+
+```{r}
+library(Rcpp)
+#Test file
+url="https://raw.githubusercontent.com/csgillespie/efficient/master/R/test_rcpp.R"
+source(url)
+test_rcpp()
+```
+
+```{r}
+#Comparaison de fonctions
+add_r = function(x, y) x + y
+
+library("Rcpp")
+cppFunction('
+  double add_cpp(double x, double y) {
+    double value = x + y;
+    return value;
+  }
+')
+
+add_cpp(1, 2)
+```
+
+##Testing C function
+
+```{r}
+sourceCpp("test.cpp")
+testtt()
+```
+
