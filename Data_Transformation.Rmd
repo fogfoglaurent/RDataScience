@@ -50,6 +50,17 @@ knitr::opts_chunk$set(echo = TRUE)
   library(dplyr)
 ```
 
+#Concepts
+
+* filter(): selecting observations based on criterion (equivalent to if...then...output in SAS)
+* select(): selecting output variables (equivalent to "keep" in SAS)
+* mutate(): create new variables with functions of existing variables
+* summarise(): Collapse many values down to a single summary (equivalent to "PROC MEANS" in SAS)
+* arrange(): sort variables by increasing or decreasing order (equivalent to "PROC SORT" in SAS)
+* group_by(): perform the above instructions by variable(s) (equivalent to "by" in SAS)
+
+Input and output of these functions are data frames or tibbles.
+
 #Using pipes
 
 ##Example of using intermediate objects
