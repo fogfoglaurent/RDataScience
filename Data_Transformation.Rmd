@@ -1,6 +1,9 @@
 ---
 title: "Data Transformation"
-output: html_document
+output: 
+  html_document:
+    number_sections: true
+    toc: true
 ---
 
 <style type="text/css">
