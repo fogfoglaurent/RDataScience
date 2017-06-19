@@ -10,6 +10,275 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+#Packages
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(tidyr)
+```
+
+
+#Data Transformation
+
+##filtering basic
+```{r}
+library(nycflights13)
+filter(flights, month == 1, day == 1)
+#Print and store
+(dec25 <- filter(flights, month == 12, day == 25))
+#Comparison floating point numbers
+near(sqrt(2)^2,2)
+#Filtering between two values
+flights %>% filter(between(day,1,3))
+```
+
+##Missing values
+```{r}
+x=NA
+is.na(x)
+
+#Display NA values
+df <- tibble(x = c(1, NA, 3))
+filter(df, x > 1)
+#> # A tibble: 1 × 1
+#>       x
+#>   <dbl>
+#> 1     3
+filter(df, is.na(x) | x > 1)
+
+filter(flights,month %in% c(7,8,9))
+
+filter(flights,is.na(dep_time))
+```
+
+##Arrange (sort)
+
+```{r}
+arrange(flights, year, month, day)
+
+arrange(flights, desc(year))
+
+##NA values are sorted at the end##
+
+arrange(flights, is.na(arr_delay))
+```
+
+##Select
+
+```{r}
+#Selection column between two variables
+select(flights, year:day)
+
+#Opposite selection
+select(flights, -(year:day))
+
+#Renaming
+rename(flights, tail_num = tailnum)
+
+#Utile pour deplacer des variables devant les autres
+select(flights, time_hour, air_time, everything())
+```
+
+##Mutate
+```{r}
+flights_sml <- select(flights, 
+  year:day, 
+  ends_with("delay"), 
+  distance, 
+  air_time
+)
+mutate(flights_sml,
+  gain = arr_delay - dep_delay,
+  speed = distance / air_time * 60
+)
+
+#Transmute (keep only new variables)
+
+transmute(flights,
+  gain = arr_delay - dep_delay,
+  hours = air_time / 60,
+  gain_per_hour = gain / hours
+)
+
+#Scinder le temps en heure / minute
+
+transmute(flights,
+  dep_time,
+  hour = dep_time %/% 100,
+  minute = dep_time %% 100
+)
+
+transmute(flights,
+  dep_time,
+  hour = dep_time%/%3600,
+  minute = (dep_time-3600*hour)%/%60
+)
+
+#Lag et lead (fonction inverse)
+(x <- 1:10)
+lag(x)
+#>  [1] NA  1  2  3  4  5  6  7  8  9
+lead(x)
+
+y <- c(1, 2,3, NA, 3, 4)
+min_rank(y)
+
 
 ```
+
+##Summarise
+
+```{r}
+#Overall summary
+summarise(flights, delay = mean(dep_delay, na.rm = TRUE))
+
+#Summary by group using group_by without pipeline
+by_dest <- group_by(flights, dest)
+delay <- summarise(by_dest,
+  count = n(),
+  dist = mean(distance, na.rm = TRUE),
+  delay = mean(arr_delay, na.rm = TRUE)
+)
+
+#Summary by group using group_by with pipeline
+delays <- flights %>% 
+  group_by(dest) %>% 
+  summarise(
+    count = n(),
+    dist = mean(distance, na.rm = TRUE),
+    delay = mean(arr_delay, na.rm = TRUE)
+  )
+
+#Removing missing values for aggregating functions
+flights %>% 
+  group_by(year, month, day) %>% 
+  summarise(mean = mean(dep_delay, na.rm = TRUE))
+
+not_cancelled <- flights %>% 
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+
+
+not_cancelled <- flights %>% 
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+delays <- not_cancelled %>% 
+  group_by(tailnum) %>% 
+  summarise(
+    delay = mean(arr_delay, na.rm = TRUE),
+    n = n()
+  )
+
+ggplot(data = delays, mapping = aes(x = n, y = delay)) + 
+  geom_point(alpha = 1/10)
+```
+
+```{r}
+#Other summarizing functions (sd, min, p25, median, p75, max)
+
+not_cancelled %>% 
+  group_by(dest) %>% 
+  summarise(
+    n=n(),
+    delay_sd = sd(dep_delay),
+    min=min(dep_delay),
+    p25=quantile(dep_delay,0.25),
+    median=median(dep_delay),
+    p75=quantile(dep_delay,0.75),
+    max=max(dep_delay)) %>% 
+  filter(n>25)
+
+```
+
+```{r}
+#Count data (summing the variable) using a weighing variable
+not_cancelled %>% 
+  count(tailnum, wt = distance)
+```
+
+```{r}
+#Counting the number of observations according to one condition
+not_cancelled %>% 
+  group_by(year, month, day) %>% 
+  summarise(n_early = sum(dep_time < 500))
+
+#Counting the number of observations according to one condition
+not_cancelled %>% 
+  group_by(year, month, day) %>% 
+  summarise(hour_perc = mean(arr_delay > 60))
+```
+
+```{r}
+#Summary at the lowest hierarchy
+daily <- group_by(flights, year, month, day)
+(per_day   <- summarise(daily, flights = n()))
+
+#Summary at the above level
+(per_month <- summarise(per_day, flights = sum(flights)))
+```
+
+#Ungrouping the data
+
+```{r}
+daily <- group_by(flights, year)
+#Ungrouping the data to perform overall summary for example
+daily %>% 
+  ungroup() %>% 
+  summarise(flights = n()) 
+```
+
+#Group mutate
+
+```{r}
+#Using filter function to filter by group
+flights_sml %>% 
+  group_by(year, month, day) %>%
+  filter(rank(desc(arr_delay)) < 10)
+
+#Filter group by size
+popular_dests <- flights %>% 
+  group_by(dest) %>% 
+  filter(n() > 365)
+popular_dests
+
+#Calculate a proportion and restrict the number of variables in the data frame
+popular_dests %>% 
+  filter(arr_delay > 0) %>% 
+  mutate(prop_delay = arr_delay / sum(arr_delay)) %>% 
+  select(year:day, dest, arr_delay, prop_delay)
+```
+
+#Data Wrangling
+
+##Handling tibble
+
+```{r}
+#Creating tibbles
+##Tibble does not change strings to factors
+as_tibble(iris)
+
+#Creating a tibble using tribble function
+tribble(
+  ~x, ~y, ~z,
+  #--|--|----
+  "a", 2, 3.6,
+  "b", 1, 8.5
+)
+
+#Printing tibble/data frames
+test=tibble(
+  a = lubridate::now() + runif(1e3) * 86400,
+  b = lubridate::today() + runif(1e3) * 30,
+  c = 1:1e3,
+  d = runif(1e3),
+  e = sample(letters, 1e3, replace = TRUE)
+)
+  ##General option for settings the max number of rows printed
+  options(tibble.print_max = n, tibble.print_min = m)
+  
+#Converting a tibble to data.frame
+  test=as.data.frame(test)
+  ##Checking the class of the created object
+  class(test)
+```
+
+
 
