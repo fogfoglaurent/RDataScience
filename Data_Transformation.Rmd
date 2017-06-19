@@ -1,0 +1,148 @@
+---
+title: "Data Transformation"
+output: 
+  html_document:
+    number_sections: true
+    toc: true
+---
+
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 12px;
+  }
+td {  /* Table  */
+  font-size: 8px;
+}
+h1.title {
+  font-size: 38px;
+  color: DarkRed;
+}
+h1 { /* Header 1 */
+  font-size: 28px;
+  color: DarkBlue;
+}
+h2 { /* Header 2 */
+    font-size: 22px;
+  color: DarkBlue;
+}
+h3 { /* Header 3 */
+  font-size: 18px;
+  font-family: "Times New Roman", Times, serif;
+  color: DarkBlue;
+}
+code.r{ /* Code block */
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,message=FALSE,echo=FALSE}
+#Package
+  library(magrittr)
+  library(dplyr)
+```
+
+#Concepts
+
+* filter(): selecting observations based on criterion (equivalent to if...then...output in SAS)
+* select(): selecting output variables (equivalent to "keep" in SAS)
+* mutate(): create new variables with functions of existing variables
+* summarise(): Collapse many values down to a single summary (equivalent to "PROC MEANS" in SAS)
+* arrange(): sort variables by increasing or decreasing order (equivalent to "PROC SORT" in SAS)
+* group_by(): perform the above instructions by variable(s) (equivalent to "by" in SAS)
+
+Input and output of these functions are data frames or tibbles.
+
+#Using pipes
+
+##Example of using intermediate objects
+
+This is a way to proceed to several steps using intermediate objects. However, the code tends to be lengthy and the incrementation of each object has to be carefully done.
+```{r}
+#Overwriting the data
+  foo_foo <- as.data.frame(c(1,2,3))
+  foo_foo_1 <- cbind(foo_foo,c(2,3,4))
+  foo_foo_2 <- cbind(foo_foo_1,c(3,4,5))
+  foo_foo_3 <- cbind(foo_foo_2,c(4,5,6))
+  colnames(foo_foo_3)=c("a","b","c","d")
+  
+```
+
+##Overwriting the data
+
+Another possibility is to overwrite the object at each step.
+```{r}
+#Overwriting the data
+  foo_foo <- data.frame(c(1,2,3))
+  foo_foo <- cbind(foo_foo,c(2,3,4))
+  foo_foo <- cbind(foo_foo,c(3,4,5))
+  foo_foo <- cbind(foo_foo,c(4,5,6))
+  colnames(foo_foo)=c("a","b","c","d")
+```
+
+##Function composition
+
+This method does not require any intermediate object but it may be difficult to read since it should be read from the last instruction.
+```{r}
+#Method using intermediate objects
+  foo_foo=as.data.frame(foo_foo)
+  foo_foo_1=select(foo_foo,b)
+  foo_foo_2=summarise(foo_foo_1,mean=mean(b))
+  
+#Method using function composition (encapsulation)
+  summarise(select(as.data.frame(foo_foo),b),mean=mean(b))
+```
+
+##Using pipes
+
+Pipe are called using the symbol %>% (shortcut: Ctrl+Shift+M) and create an intermediate object "." which is discarded at last.
+```{r}
+#Using pipes
+  foo_foo %>% 
+    as.data.frame() %>% 
+    select(b) %>%
+    summarise(mean=mean(b))
+    
+#How do pipe work?
+mypipe=function(.){
+  .=as.data.frame(.)
+  .=select(.,b)
+  summarise(.,mean=mean(b))
+  
+}
+
+mypipe(foo_foo)
+```
+
+##Caution when using pipe
+* Pipes do not work with assign() and environment() functions.
+* Better to limit the number of operations
+* Not adapted to multiple inputs
+
+#Other operators than pipes
+
+##The %$% operator
+
+Useful for splitting variables from a dataframe
+```{r}
+#Splitting variables from a dataframe
+mtcars %$%
+  cor(disp, mpg)
+```
+
+##The %<>% operator
+
+Useful for storing the output into the original dataframe
+
+```{r}
+mtcars %<>% transform(cyl = cyl * 2)
+```
+

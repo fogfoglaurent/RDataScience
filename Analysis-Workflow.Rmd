@@ -15,6 +15,7 @@ library(dplyr)
 library(ggplot2)
 library(magrittr)
 library(tidyr)
+library(tibble)
 ```
 
 
@@ -272,6 +273,8 @@ test=tibble(
   e = sample(letters, 1e3, replace = TRUE)
 )
   ##General option for settings the max number of rows printed
+  n=10
+  m=5
   options(tibble.print_max = n, tibble.print_min = m)
   
 #Converting a tibble to data.frame
