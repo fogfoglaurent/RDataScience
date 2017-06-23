@@ -41,16 +41,20 @@ pre { /* Code block - determines code spacing between lines */
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,comment="",message=FALSE,warning=FALSE)
 ```
 
 ```{r,message=FALSE,echo=FALSE}
 #Package
   library(magrittr)
   library(dplyr)
+  library(ggplot2)
+  library(tidyr)
+  library(tibble)
+  library(nycflights13)
 ```
 
-#Concepts
+#Data transformation
 
 * filter(): selecting observations based on criterion (equivalent to if...then...output in SAS)
 * select(): selecting output variables (equivalent to "keep" in SAS)
@@ -60,6 +64,278 @@ knitr::opts_chunk$set(echo = TRUE)
 * group_by(): perform the above instructions by variable(s) (equivalent to "by" in SAS)
 
 Input and output of these functions are data frames or tibbles.
+
+
+##Filtering basic
+
+* filter() function take as argument the data.frame and the variable on which the condition is applied.
+* near() function is useful when comparing two numbers resulting in an approximation (approximation of the root in the example below).
+```{r}
+filter(flights, month == 1, day == 1)
+#Print and store
+(dec25 <- filter(flights, month == 12, day == 25))
+#Comparison floating point numbers
+near(sqrt(2)^2,2)
+#Filtering between two values
+flights %>% filter(between(day,1,3))
+```
+
+###Missing values and list
+
+To select missing values, is.na() function can be used within filter() function. Also, filtering using a list (vector) can be performed using the operator "%in%".
+```{r}
+x=NA
+is.na(x)
+
+#Display NA values
+df <- tibble(x = c(1, NA, 3))
+filter(df, x > 1)
+#> # A tibble: 1 × 1
+#>       x
+#>   <dbl>
+#> 1     3
+filter(df, is.na(x) | x > 1)
+
+filter(flights,month %in% c(7,8,9))
+
+filter(flights,is.na(dep_time))
+```
+
+##Arrange (sort)
+
+To sort data by variables, use the arrange() function. The dataset is sorted by the order of the listed variables. 
+To sort in the decreasing order, use desc() function within arrange, with the variable name as argument.
+```{r}
+arrange(flights, year, month, day)
+
+arrange(flights, desc(year))
+
+##NA values are sorted at the end##
+
+arrange(flights, is.na(arr_delay))
+```
+
+##Select
+
+* To keep specified variables, or to reorder the order of the columns of the dataset, use the select() function. 
+* The operator ":" allows to select a range of columns and "-" operator allows to delete columns.
+* everything() allows to include other variables not explicitely mention in select() function
+```{r}
+#Selection column between two variables
+select(flights, year:day)
+
+#Opposite selection (Removing variables)
+select(flights, -(year:day))
+
+#Renaming variable (new_name=old_name)
+rename(flights, tail_num = tailnum)
+
+#Change the order of the columns
+select(flights, time_hour, air_time, everything())
+```
+
+##Mutate
+
+To create new variables, use the mutate() function which takes the data.frame and the new variable definition formula as argument. 
+```{r}
+#Mutate
+flights_sml <- select(flights, 
+  year:day, 
+  ##ends_with allows to select variable whose name ends with the argument declared i.e "delay" in this example 
+  ends_with("delay"), 
+  distance, 
+  air_time
+)
+mutate(flights_sml,
+  gain = arr_delay - dep_delay,
+  speed = distance / air_time * 60
+)
+
+```
+
+Transmute is an alternative to mutate and performs exactly as mutate() except that the old variable is dropped from the dataframe.
+```{r}
+#Transmute (keep only the new variables)
+transmute(flights,
+  gain = arr_delay - dep_delay,
+  hours = air_time / 60,
+  gain_per_hour = gain / hours
+)
+
+#Divide the time into minute and hour using transmutate
+
+transmute(flights,
+  dep_time,
+  hour = dep_time %/% 100,
+  minute = dep_time %% 100
+)
+
+transmute(flights,
+  dep_time,
+  hour = dep_time%/%3600,
+  minute = (dep_time-3600*hour)%/%60
+)
+```
+
+
+##Lag function
+
+* lag() function is similar to lag function in SAS. It takes a vector as argument and shift the data by one increment.
+* lead() function performs the opposite and replace the value by the next value.
+* min_rank() outputs the rank of each data (in the increasing order).
+```{r}
+#Lag et lead (fonction inverse)
+(x <- 1:10)
+lag(x)
+#>  [1] NA  1  2  3  4  5  6  7  8  9
+lead(x)
+
+y <- c(1, 2,4, NA, 3, 5)
+min_rank(y)
+```
+
+
+##Summarise
+
+summarise() function allows to calculate overall descriptive summary,
+```{r}
+#Overall summary
+summarise(flights, delay = mean(dep_delay, na.rm = TRUE))
+```
+
+To descriptively summarize the dataset by group use group_by() function. group_by() function takes the dataset name and the name of the grouping variable as argument.
+```{r}
+#Summary by group using group_by without pipeline
+  by_dest <- group_by(flights, dest)
+  delay <- summarise(by_dest,
+    count = n(),
+    dist = mean(distance, na.rm = TRUE),
+    delay = mean(arr_delay, na.rm = TRUE)
+  )
+  delay
+```
+
+```{r,eval=FALSE}
+#Summary by group using group_by with pipeline
+  delays <- flights %>% 
+    group_by(dest) %>% 
+    summarise(
+      count = n(),
+      dist = mean(distance, na.rm = TRUE),
+      delay = mean(arr_delay, na.rm = TRUE)
+    )
+  delays
+```
+
+You can explicitely mention to remove missing values. If missing values are present, NA will be output.
+```{r}
+#Removing missing values for aggregating functions (argument na.rm)
+flights %>% 
+  group_by(year, month, day) %>% 
+  summarise(mean = mean(dep_delay, na.rm = TRUE))
+```
+
+Many function can be used to calculate descriptive summary (n,sd, min, quantile, median, max).
+```{r}
+#Other summarizing functions (sd, min, p25, median, p75, max)
+
+flights %>% 
+  group_by(dest) %>% 
+  summarise(
+    #n
+    n=n(),
+    #standard deviation
+    delay_sd = sd(dep_delay,na.rm=TRUE),
+    #minimum
+    min=min(dep_delay,na.rm=TRUE),
+    #1st quartile
+    p25=quantile(dep_delay,0.25,na.rm=TRUE),
+    #Median
+    median=median(dep_delay,na.rm=TRUE),
+    #3rd quartile
+    p75=quantile(dep_delay,0.75,na.rm=TRUE),
+    #Max
+    max=max(dep_delay,na.rm=TRUE)) %>% 
+  filter(n>25)
+
+```
+
+It is possible to perform the sum of a variable by a specified variable is the count() function. The first variable is the group variable and the second is the variable to be summed
+```{r}
+#Count data (summing the variable "distance"") by "tailnum" variable
+flights %>% 
+  count(tailnum, wt = distance)
+```
+
+It is possible to calculate the frequency for each variable category using the count() function.
+
+```{r}
+#Counting the frequency of dest variable
+flights %>% 
+  count(dest)
+```
+
+To perform the calculation of the number or the proportion of observations according to one criteria, it is possible to use sum() and mean() functions, respectively. 
+```{r}
+#Counting the number of observations according to one condition: dep_time < 500
+flights %>% 
+  group_by(year, month, day) %>% 
+  summarise(n_early = sum(dep_time < 500))
+
+#Counting the proportion of observations according to another condition arr_delay > 60
+flights %>% 
+  group_by(year, month, day) %>% 
+  summarise(hour_perc = mean(arr_delay > 60))
+```
+
+If summarise is used in a sequential way, at the following step, data are summarized at the next above level.
+```{r}
+#Summary at the lowest hierarchy
+daily <- group_by(flights, year, month, day)
+(per_day   <- summarise(daily, flights = n()))
+
+#Summary at the above level
+(per_month <- summarise(per_day, flights = sum(flights)))
+```
+
+#Ungrouping the data
+
+To remove to the grouping settings, use ungroup() function.
+```{r}
+daily <- group_by(flights, year)
+#Ungrouping the data to perform overall summary for example
+daily %>% 
+  ungroup() %>% 
+  summarise(flights = n()) 
+```
+
+#Group mutate (and filters)
+
+It is possible to use mutate() and filter() functions downstream group_by(). 
+```{r}
+#Using filter function to filter by group
+flights_sml %>% 
+  group_by(year, month, day) %>%
+  filter(rank(desc(arr_delay)) < 10)
+
+#Filter group by size
+popular_dests <- flights %>% 
+  group_by(dest) %>% 
+  filter(n() > 365)
+popular_dests
+
+```
+
+```{r}
+
+#Calculate a proportion and restrict the number of variables in the data frame
+#Notice that popular_dests is a grouped data.frame
+popular_dests %>% 
+  filter(arr_delay > 0) %>% 
+  mutate(prop_delay = arr_delay / sum(arr_delay)) %>% 
+  select(year:day, dest, arr_delay, prop_delay)
+```
+
 
 #Using pipes
 
@@ -111,7 +387,7 @@ Pipe are called using the symbol %>% (shortcut: Ctrl+Shift+M) and create an inte
     select(b) %>%
     summarise(mean=mean(b))
     
-#How do pipe work?
+#How does pipe work?
 mypipe=function(.){
   .=as.data.frame(.)
   .=select(.,b)
