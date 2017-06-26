@@ -1,0 +1,112 @@
+---
+title: "Tibbles"
+output: 
+  html_document:
+    number_sections: true
+    toc: true
+---
+
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 12px;
+  }
+td {  /* Table  */
+  font-size: 8px;
+}
+h1.title {
+  font-size: 38px;
+  color: DarkRed;
+}
+h1 { /* Header 1 */
+  font-size: 28px;
+  color: DarkBlue;
+}
+h2 { /* Header 2 */
+    font-size: 22px;
+  color: DarkBlue;
+}
+h3 { /* Header 3 */
+  font-size: 18px;
+  font-family: "Times New Roman", Times, serif;
+  color: DarkBlue;
+}
+code.r{ /* Code block */
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Loading packages
+library(tidyverse)
+```
+
+#Creating tibbles
+
+* as_tibble(): conversion of a data frame to tibble
+* tibble(): creating a data frame from vectors
+* tribble(): creating a data frame (column headers start with ~)
+
+In tibbles, the type of data is not changed during the process.
+```{r}
+#Converting a data frame to iris
+as_tibble(iris)
+
+#Creating a tibble by combining vectors
+tibble(
+  x = 1:5, 
+  y = 1, 
+  z = x ^ 2 + y
+)
+
+#Creating a tibble by inputing each value
+tribble(
+  #column headers
+  ~x, ~y, ~z,
+  #--|--|----
+  #Data input
+  "a", 2, 3.6,
+  "b", 1, 8.5
+)
+```
+
+#Printing tibbles
+
+The main difference in the usage of data frame and tibbles concerns printing and subsetting.
+
+```{r}
+  #Options of tibble printing
+  #Print only n rows if more than m rows in the data
+  options(tibble.print_max = n, tibble.print_min = m)
+  
+  #To show all rows
+  options(dplyr.print_min = Inf)
+```
+
+#Subsetting
+
+There exist several ways to extract variables from tibble.
+```{r}
+#Creating a test tibble
+df <- tibble(
+  x = runif(5),
+  y = rnorm(5)
+)
+
+# Extract by name
+df$x
+
+df[["x"]]
+
+# Extract by position (extract the first variable)
+df[[1]]
+
+```
+
