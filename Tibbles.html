@@ -177,7 +177,7 @@ library(tidyverse)</code></pre>
 <li>tibble(): creating a data frame from vectors</li>
 <li>tribble(): creating a data frame (column headers start with ~)</li>
 </ul>
-<p>In tibbles, the type of data is not changed during the process.</p>
+<p>In tibbles, the type of data is not changed during the import process.</p>
 <pre class="r"><code>#Converting a data frame to iris
 as_tibble(iris)</code></pre>
 <pre><code>## # A tibble: 150 × 5
@@ -246,12 +246,12 @@ df &lt;- tibble(
 
 # Extract by name
 df$x</code></pre>
-<pre><code>## [1] 0.4514977 0.9252663 0.5574106 0.9563015 0.9552074</code></pre>
+<pre><code>## [1] 0.5347840 0.9968486 0.1505838 0.3840116 0.9343014</code></pre>
 <pre class="r"><code>df[[&quot;x&quot;]]</code></pre>
-<pre><code>## [1] 0.4514977 0.9252663 0.5574106 0.9563015 0.9552074</code></pre>
+<pre><code>## [1] 0.5347840 0.9968486 0.1505838 0.3840116 0.9343014</code></pre>
 <pre class="r"><code># Extract by position (extract the first variable)
 df[[1]]</code></pre>
-<pre><code>## [1] 0.4514977 0.9252663 0.5574106 0.9563015 0.9552074</code></pre>
+<pre><code>## [1] 0.5347840 0.9968486 0.1505838 0.3840116 0.9343014</code></pre>
 </div>
 
 

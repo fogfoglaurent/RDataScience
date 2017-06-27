@@ -54,7 +54,7 @@ library(tidyverse)
 * tibble(): creating a data frame from vectors
 * tribble(): creating a data frame (column headers start with ~)
 
-In tibbles, the type of data is not changed during the process.
+In tibbles, the type of data is not changed during the import process.
 ```{r}
 #Converting a data frame to iris
 as_tibble(iris)
