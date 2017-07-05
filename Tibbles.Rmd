@@ -39,7 +39,7 @@ pre { /* Code block - determines code spacing between lines */
 }
 </style>
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE,message=FALSE,warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -54,7 +54,7 @@ library(tidyverse)
 * tibble(): creating a data frame from vectors
 * tribble(): creating a data frame (column headers start with ~)
 
-In tibbles, the type of data is not changed during the process.
+In tibbles, the type of data is not changed during the import process.
 ```{r}
 #Converting a data frame to iris
 as_tibble(iris)
@@ -84,6 +84,8 @@ The main difference in the usage of data frame and tibbles concerns printing and
 ```{r}
   #Options of tibble printing
   #Print only n rows if more than m rows in the data
+  n=10
+  m=20
   options(tibble.print_max = n, tibble.print_min = m)
   
   #To show all rows

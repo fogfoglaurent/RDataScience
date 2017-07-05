@@ -66,6 +66,7 @@ ggplot(data = mpg) +
 ##Aesthetics
 
 Aesthetics aes() function allows to modify the appearance of the geoms (point in the example below).
+
 * color: change the color of geom
 * size: affect the size of geom
 * alpha: affect the level of transparency
@@ -112,7 +113,7 @@ Facets can be used in conjunction with ggplot to plot separately the data accord
 
 ##One variable
 * facet_wrap: display the different graphs in rows 
-* facet_grid: display the different graphs in rows or in coloumn
+* facet_grid: display the different graphs in rows or in column
 ```{r}
 #Two rows
 ggplot(data = mpg) + 
@@ -152,14 +153,12 @@ ggplot(data = mpg) +
 ```
 
 The following options can be used to plot the data for different groups when using geom_smooth():
+
 * color: plot one curve by group (different colors)
 * group: plot one curve by group
 
 ```{r}
 #Plotting curves by group variable
-ggplot(data = mpg) +
-  geom_smooth(mapping = aes(x = displ, y = hwy))
-              
 ggplot(data = mpg) +
   geom_smooth(mapping = aes(x = displ, y = hwy, group = drv))
     
@@ -245,7 +244,7 @@ ggplot(data = diamonds) +
   )
 ```
 
-#Position adjustment
+#Position/color adjustment
 
 ##Display group using colors with geom_bar
 * colour: color the contour of the geom (by group)
@@ -265,9 +264,7 @@ ggplot(data = diamonds, mapping = aes(x = cut, colour = clarity)) +
   geom_bar(fill = NA, position = "identity")
 ```
 
-##Control the position
-
-###Geom_bar
+##Geom_bar
 
 * position="fill": bar are stacked by group variable
 * position="dodge": bar are separated horizontally by group
@@ -332,6 +329,7 @@ ggplot(data = mpg) +
 ```
 
 To display frequencies according to 2 categorical variables, two geoms are available:
+
 * geom_tile(): data has to be processed beforehand using count function to calculate the frequencies in each group (color x cut in the example below)
 * geom_bin2d()
 
