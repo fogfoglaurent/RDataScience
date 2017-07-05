@@ -1,0 +1,163 @@
+---
+title: "Relational data"
+author: "Thomas Laurent"
+date: "2017年7月1日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Loading package
+library(tidyverse)
+library(nycflights13)
+```
+
+#Checking primary keys
+```{r}
+#Primary key
+planes %>% 
+  count(tailnum) %>% 
+  filter(n > 1)
+```
+
+#Mutating joins
+
+```{r}
+#using dplyr
+flights %>%
+  select(-origin, -dest) %>% 
+  left_join(airlines, by = "carrier")
+
+#using mutate
+flights %>%
+  select(-origin, -dest) %>% 
+  mutate(name = airlines$name[match(carrier, airlines$carrier)])
+```
+
+```{r}
+x <- tribble(
+  ~key, ~val_x,
+     1, "x1",
+     2, "x2",
+     3, "x3"
+)
+y <- tribble(
+  ~key, ~val_y,
+     1, "y1",
+     2, "y2",
+     4, "y3"
+)
+```
+
+##Inner join
+
+```{r}
+x %>% 
+  inner_join(y, by = "key")
+```
+
+##Left join
+
+```{r}
+left_join(x, y, by = "key")
+```
+
+##Duplicated keys
+
+```{r}
+x <- tribble(
+  ~key, ~val_x,
+     1, "x1",
+     2, "x2",
+     2, "x3",
+     1, "x4"
+)
+y <- tribble(
+  ~key, ~val_y,
+     1, "y1",
+     2, "y2"
+)
+left_join(x, y, by = "key")
+```
+
+##Options
+
+* by: use all common variables if NULL
+
+```{r}
+#key argument when names differ
+flights %>% 
+  left_join(airports, by=c("dest" = "faa"))
+```
+
+```{r}
+airports %>%
+  semi_join(flights, c("faa" = "dest")) %>%
+  ggplot(aes(lon, lat)) +
+    borders("state") +
+    geom_point() +
+    coord_quickmap()
+```
+
+#Comparison dplyr and merge
+dplyr	merge
+inner_join(x, y)	merge(x, y)
+left_join(x, y)	merge(x, y, all.x = TRUE)
+right_join(x, y)	merge(x, y, all.y = TRUE),
+full_join(x, y)	merge(x, y, all.x = TRUE, all.y = TRUE)
+
+#Filtering joins
+
+Affect only the observations not the data
+
+##Semi-join
+```{r}
+top_dest <- flights %>%
+  count(dest, sort = TRUE) %>%
+  head(10)
+
+#Semi-join using filter
+flights %>% 
+  filter(dest %in% top_dest$dest)
+```
+
+##Anti-join
+
+Select observations that does not meet the criteria
+
+```{r}
+#Anti-join
+flights %>%
+  anti_join(planes, by = "tailnum") %>%
+  count(tailnum, sort = TRUE)
+```
+
+#Set operations
+
+Union, intersection and differences in observations between dataframe with the same structure
+```{r}
+df1 <- tribble(
+  ~x, ~y,
+   1,  1,
+   2,  1
+)
+df2 <- tribble(
+  ~x, ~y,
+   1,  1,
+   1,  2
+)
+
+#Intersection
+intersect(df1, df2)
+
+#Union
+union(df1,df2)
+
+#Difference
+##Returns the observation in df1 (first declared data.frame) that are not in df2
+setdiff(df1,df2)
+```
+

@@ -1,0 +1,205 @@
+---
+title: "Data Import"
+author: "Thomas Laurent"
+date: "2017年6月26日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Loading package
+library(tidyverse)
+library(feather)
+```
+
+#Read csv
+read_ functions are much more faster and generate tibbles.
+
+##Inline file
+```{r}
+read_csv("a,b,c
+1,2,3
+4,5,6")
+```
+
+##Skipping lines
+
+```{r}
+read_csv("The first line of metadata
+  The second line of metadata
+  x,y,z
+  1,2,3", skip = 2)
+```
+
+```{r}
+#\n adding a new line
+read_csv("1,2,3\n4,5,6", col_names = FALSE)
+```
+
+```{r}
+#adding colnames to csv
+read_csv("1,2,3\n4,5,6", col_names = c("x", "y", "z"))
+```
+
+#Parsing a vector
+
+```{r}
+str(parse_logical(c("TRUE", "FALSE", "NA")))
+str(parse_integer(c("1", "2", "3")))
+str(parse_date(c("2010-01-01", "1979-10-14")))
+```
+
+##Locale
+
+```{r}
+parse_double("1,23", locale = locale(decimal_mark = ","))
+
+parse_number("123.456.789", locale = locale(grouping_mark = "."))
+```
+
+###parse_number
+
+Useful for extracting number in text
+
+```{r}
+parse_number("$100")
+#> [1] 100
+parse_number("20%")
+#> [1] 20
+parse_number("It cost $123.45")
+```
+
+###parsing character with special alphabets
+
+```{r}
+x1 <- "El Ni\xf1o was particularly bad this year"
+x2 <- "\x82\xb1\x82\xf1\x82\xc9\x82\xbf\x82\xcd"
+
+parse_character(x1, locale = locale(encoding = "Latin1"))
+#> [1] "El Niño was particularly bad this year"
+parse_character(x2, locale = locale(encoding = "Shift-JIS"))
+#> [1] "こんにちは"
+```
+
+There is a function to guess which encoding would be more suitable.
+
+```{r}
+guess_encoding(charToRaw(x1))
+
+guess_encoding(charToRaw(x2))
+```
+
+###Parsing factors
+
+```{r}
+fruit <- c("apple", "banana")
+parse_factor(c("apple", "banana"), levels = fruit)
+```
+
+###Date and datetime
+
+```{r}
+parse_datetime("2010-10-01T2010")
+#> [1] "2010-10-01 20:10:00 UTC"
+# If time is omitted, it will be set to midnight
+parse_datetime("20101010")
+#> [1] "2010-10-10 UTC"
+parse_date("2010-10-01")
+```
+
+For time use the package "hms"
+
+```{r}
+library(hms)
+parse_time("01:10 am")
+#> 01:10:00
+parse_time("20:10:01")
+```
+
+Time parsing with formats
+```{r}
+parse_date("01/02/15", "%m/%d/%y")
+#> [1] "2015-01-02"
+parse_date("01/02/15", "%d/%m/%y")
+#> [1] "2015-02-01"
+parse_date("01/02/15", "%y/%m/%d")
+#> [1] "2001-02-15"
+
+#Using french locale
+parse_date("1 janvier 2015", "%d %B %Y", locale = locale("fr"))
+```
+
+#Importing file
+
+Guessing the type of the column
+```{r}
+guess_parser("2010-10-01")
+```
+
+
+```{r}
+challenge <- read_csv(readr_example("challenge.csv"))
+
+problems(challenge)
+```
+
+Specifying the column types when there are problems.
+```{r}
+challenge <- read_csv(
+  readr_example("challenge.csv"), 
+  col_types = cols(
+    x = col_double(),
+    y = col_date()
+  )
+)
+```
+
+Select the number of rows to determine the type of data 
+```{r}
+challenge2 <- read_csv(readr_example("challenge.csv"), guess_max = 1001)
+```
+
+Read data as a character columns by default
+```{r}
+challenge2 <- read_csv(readr_example("challenge.csv"), 
+  col_types = cols(.default = col_character())
+)
+```
+
+#Conversion of the data type in a tibble
+
+```{r}
+df <- tribble(
+  ~x,  ~y,
+  "1", "1.21",
+  "2", "2.32",
+  "3", "4.56"
+)
+
+type_convert(df)
+```
+
+For debugging, use read_file()
+
+```{r}
+#Reading the data as a single line
+read_file(readr_example("challenge.csv"))
+```
+
+#Writing to a file
+* Saving dates in ISO format
+* Encoding in UTF8
+```{r}
+#CSV (data type is lost)
+write_csv(challenge, "challenge.csv")
+
+#Keeping data type
+write_rds(challenge, "challenge.rds")
+
+#Export the data in feather format (compatible with other programming languages)
+write_feather(challenge, "challenge.feather")
+```
+

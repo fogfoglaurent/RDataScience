@@ -1,0 +1,158 @@
+---
+title: "Tidy data"
+author: "Thomas Laurent"
+date: "2017年6月29日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Loading package
+library(tidyverse)
+```
+
+#Gathering
+
+To gather columns into a new pair of variables
+```{r}
+#Gathering by year
+table4a %>% 
+  gather(`1999`, `2000`, key = "year", value = "cases")
+```
+
+Performing two gathering steps and merging datasets
+```{r}
+tidy4a <- table4a %>% 
+  gather(`1999`, `2000`, key = "year", value = "cases")
+tidy4b <- table4b %>% 
+  gather(`1999`, `2000`, key = "year", value = "population")
+left_join(tidy4a, tidy4b)
+```
+
+#Spreading
+
+To put observations that are on multiple rows into one row.
+
+```{r}
+#Key :equivalent to by
+#Value: equivalent to var
+spread(table2, key = type, value = count)
+```
+
+#Separating one column
+
+Separate the data from one column into two columns based on a non alphanumeric character.
+
+```{r}
+#Separate
+table3 %>% 
+  separate(rate, into = c("cases", "population"))
+
+#Setting the separator
+
+table3 %>% 
+  separate(rate, into = c("cases", "population"), sep = "/",convert=TRUE)
+```
+
+```{r}
+#Using position
+table3 %>% 
+  separate(year, into = c("century", "year"), sep = 2)
+```
+
+#Unite
+
+It performs the opposite operation.
+
+```{r}
+#Unite
+table5 %>% 
+  unite(new, century, year)
+```
+
+#Missing values
+
+* Explicitly, i.e. flagged with NA.
+* Implicitly, i.e. simply not present in the data.
+
+```{r}
+stocks <- tibble(
+  year   = c(2015, 2015, 2015, 2015, 2016, 2016, 2016),
+  qtr    = c(   1,    2,    3,    4,    2,    3,    4),
+  return = c(1.88, 0.59, 0.35,   NA, 0.92, 0.17, 2.66)
+)
+
+stocks
+```
+
+
+Make implicit missing values explicit
+
+```{r}
+#Implicit to explicit
+stocks %>% 
+  spread(year, return)
+
+stocks %>% 
+  complete(year, qtr)
+```
+
+```{r}
+#Removing missing values
+stocks %>% 
+  spread(year, return) %>% 
+  gather(year, return, `2015`:`2016`, na.rm = TRUE)
+
+stocks %>% na.omit
+```
+
+Carry forward non missing values to fill
+```{r}
+treatment <- tribble(
+  ~ person,           ~ treatment, ~response,
+  "Derrick Whitmore", 1,           7,
+  NA,                 2,           10,
+  NA,                 3,           9,
+  "Katherine Burke",  1,           4
+)
+
+treatment %>% fill(person)
+```
+
+#Example
+
+```{r}
+who1 <- who %>% 
+  gather(new_sp_m014:newrel_f65, key = "key", value = "cases", na.rm = TRUE)
+
+#Count the number of keys
+who1 %>% 
+  count(key)
+
+#Separating relapse type and sex
+who2 <- who1 %>% 
+  mutate(key = stringr::str_replace(key, "newrel", "new_rel"))
+
+who3 <- who2 %>% 
+  separate(key, c("new", "type", "sexage"), sep = "_")
+
+who4 <- who3 %>% 
+  select(-new, -iso2, -iso3)
+
+#Creating age and sex variable by splitting sexage variable
+who5 <- who4 %>% 
+
+  who5
+
+#Using pipes
+who %>%
+  gather(code, value, new_sp_m014:newrel_f65, na.rm = TRUE) %>% 
+  mutate(code = stringr::str_replace(code, "newrel", "new_rel")) %>%
+  separate(code, c("new", "var", "sexage")) %>% 
+  select(-new, -iso2, -iso3) %>% 
+  separate(sexage, c("sex", "age"), sep = 1)
+```
+
