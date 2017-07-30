@@ -109,7 +109,7 @@ stocks %>%
 stocks %>% na.omit
 ```
 
-Carry forward non missing values to fill
+Carry forward non missing values to fill the dataset
 ```{r}
 treatment <- tribble(
   ~ person,           ~ treatment, ~response,
@@ -144,9 +144,13 @@ who4 <- who3 %>%
 
 #Creating age and sex variable by splitting sexage variable
 who5 <- who4 %>% 
+  separate(sexage, c("sex", "age"), sep = 1)
+who5
+```
 
-  who5
+Performs all operation as above using pipes
 
+```{r}
 #Using pipes
 who %>%
   gather(code, value, new_sp_m014:newrel_f65, na.rm = TRUE) %>% 

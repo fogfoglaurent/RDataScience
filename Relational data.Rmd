@@ -15,7 +15,15 @@ library(tidyverse)
 library(nycflights13)
 ```
 
+There exist two types of key for tables in relational database:
+
+* A primary key uniquely identifies an observation in its own table. For example, planes$tailnum is a primary key because it uniquely identifies each plane in the planes table.
+
+* A foreign key uniquely identifies an observation in another table. For example, the flights$tailnum is a foreign key because it appears in the flights table where it matches each flight to a unique plane.
+
 #Checking primary keys
+
+The unicity of primary key can be checked as follows.
 ```{r}
 #Primary key
 planes %>% 
@@ -25,6 +33,8 @@ planes %>%
 
 #Mutating joins
 
+Table join can be done using "X"_join() functions included in dplyr.
+Mutating joins allows to add an additional variable using an external table using match() functions by matching the key between the original table and the external table.
 ```{r}
 #using dplyr
 flights %>%
@@ -36,6 +46,8 @@ flights %>%
   select(-origin, -dest) %>% 
   mutate(name = airlines$name[match(carrier, airlines$carrier)])
 ```
+
+##Inner join
 
 ```{r}
 x <- tribble(
@@ -52,7 +64,6 @@ y <- tribble(
 )
 ```
 
-##Inner join
 
 ```{r}
 x %>% 
@@ -67,6 +78,7 @@ left_join(x, y, by = "key")
 
 ##Duplicated keys
 
+Issues can happen if the key in each table is not unique as below. Thus, you should be careful about this point when joining.
 ```{r}
 x <- tribble(
   ~key, ~val_x,
@@ -93,27 +105,11 @@ flights %>%
   left_join(airports, by=c("dest" = "faa"))
 ```
 
-```{r}
-airports %>%
-  semi_join(flights, c("faa" = "dest")) %>%
-  ggplot(aes(lon, lat)) +
-    borders("state") +
-    geom_point() +
-    coord_quickmap()
-```
-
-#Comparison dplyr and merge
-dplyr	merge
-inner_join(x, y)	merge(x, y)
-left_join(x, y)	merge(x, y, all.x = TRUE)
-right_join(x, y)	merge(x, y, all.y = TRUE),
-full_join(x, y)	merge(x, y, all.x = TRUE, all.y = TRUE)
-
-#Filtering joins
-
-Affect only the observations not the data
-
 ##Semi-join
+The principle of semi-joins is as follows:
+* semi_join(x, y) keeps all observations in x that have a match in y.
+* anti_join(x, y) drops all observations in x that have a match in y.
+
 ```{r}
 top_dest <- flights %>%
   count(dest, sort = TRUE) %>%
@@ -161,3 +157,15 @@ union(df1,df2)
 setdiff(df1,df2)
 ```
 
+#Other implementations
+
+##Comparison dplyr and merge
+dplyr functions "X"_join are equivalent to merge function in R base. However, dplyr joins are much more faster than their respective equivalents using merge function.
+
+* inner_join(x, y)	equivalent to merge(x, y)
+* left_join(x, y)	equivalent to merge(x, y, all.x = TRUE)
+* right_join(x, y) equivalent to merge(x, y, all.y = TRUE),
+* full_join(x, y)	equivalent merge(x, y, all.x = TRUE, all.y = TRUE)
+
+##Filtering joins
+Affect only the observations not the data

@@ -230,3 +230,4 @@ mod <- lm(y ~ x, data = df, na.action = na.exclude)
 nobs(mod)
 ```
 
+#Building models
