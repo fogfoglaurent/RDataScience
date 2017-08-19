@@ -1,0 +1,10 @@
+name: app1
+title:
+username:
+account: tlaurent
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 205263
+bundleId: 942941
+url: https://tlaurent.shinyapps.io/app1/
+when: 1502890910.74954
