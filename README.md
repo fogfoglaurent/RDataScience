@@ -8,3 +8,5 @@ R for Data Science
 [Advanced R]http://adv-r.had.co.nz
 
 [Tidy Data]https://stanford.edu/~ejdemyr/r-tutorials/wide-and-long/
+
+[Top 50 graphs]http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html
